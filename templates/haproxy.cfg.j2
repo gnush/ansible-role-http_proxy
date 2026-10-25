@@ -24,6 +24,7 @@ defaults
 frontend proxy_in
     bind *:{{ proxy_haproxy_port }}
     mode tcp
+    tcp-request connection reject unless { src {{ proxy_allowed_networks | join(' ') }} }
     default_backend squid_pool
 
 backend squid_pool

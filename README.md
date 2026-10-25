@@ -28,8 +28,8 @@ Defined in `defaults/main.yml`:
 | `proxy_ssl_ports`            | `443`                                  | Allowed `CONNECT` ports                                  |
 | `proxy_squid_cache_size_mb`  | `1024`                                 | Disk cache size                                          |
 | `proxy_haproxy_stats_enabled`| `true`                                 | Stats page on `127.0.0.1:7777/stats`                     |
-| `proxy_vip_cidr`             | `{{ ansible_default_ipv4.prefix }}`    | VIP prefix length                                        |
-| `proxy_vip_interface`        | `{{ ansible_default_ipv4.interface }}` | VIP interface                                            |
+| `proxy_vip_cidr`             | `ansible_default_ipv4.prefix`          | VIP prefix length                                        |
+| `proxy_vip_interface`        | `ansible_default_ipv4.interface`       | VIP interface                                            |
 | `proxy_vrrp_router_id`       | `51`                                   | VRRP router ID, unique per L2 segment                    |
 | `proxy_vrrp_auth_pass`       | `changeme`                             | VRRP password, keep in Vault                             |
 
@@ -93,8 +93,8 @@ proxy_nodes:
 
 ## Access Control
 
-Squid only accepts clients from `proxy_allowed_networks`. HAProxy does not filter;
-connections from other networks are rejected by Squid.
+Only clients from `proxy_allowed_networks` are accepted. HAProxy rejects other
+sources before they reach Squid; Squid checks the same list for direct connections.
 
 With `proxy_restrict_to_internet: true` (default), allowed clients can only reach
 destinations outside `proxy_internal_networks`, i.e. the proxy cannot be used to reach
