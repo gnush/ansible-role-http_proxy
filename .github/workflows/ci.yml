@@ -1,0 +1,60 @@
+---
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install
+        run: pip install ansible-core ansible-lint
+
+      - name: Lint
+        run: ansible-lint
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - debian12
+          - debian13
+          - ubuntu2204
+          - ubuntu2404
+          - ubuntu2604
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install
+        run: pip install ansible-core molecule molecule-plugins[docker]
+
+      - name: Molecule
+        run: molecule test --platform-name ${{ matrix.platform }} --destroy never
+        env:
+          PY_COLORS: "1"
+          ANSIBLE_FORCE_COLOR: "1"
+
+      - name: Proxy logs
+        if: failure()
+        run: |
+          for svc in squid haproxy keepalived; do
+            docker exec ${{ matrix.platform }} systemctl status $svc --no-pager || true
+            docker exec ${{ matrix.platform }} journalctl -u $svc --no-pager -n 100 || true
+          done
+          sudo dmesg | grep -i 'apparmor="DENIED"' | tail -20 || true
+...
