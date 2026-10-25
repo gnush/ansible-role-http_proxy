@@ -30,7 +30,7 @@ Defined in `defaults/main.yml`:
 | `proxy_haproxy_stats_enabled`| `true`                                 | Stats page on `127.0.0.1:7777/stats`                     |
 | `proxy_vip_cidr`             | `ansible_facts.default_ipv4.prefix`    | VIP prefix length                                        |
 | `proxy_vip_interface`        | `ansible_facts.default_ipv4.interface` | VIP interface                                            |
-| `proxy_vrrp_router_id`       | `51`                                   | VRRP router ID, unique per L2 segment                    |
+| `proxy_vrrp_router_id`       | last byte of `proxy_vip`               | VRRP router ID (1-255), unique per L2 segment            |
 | `proxy_vrrp_auth_pass`       | `changeme`                             | VRRP password, keep in Vault                             |
 
 Required when `proxy_ha_enabled` (checked in `tasks/prechecks.yml`):

@@ -71,7 +71,7 @@ proxy_keepalived_config_file: /etc/keepalived/keepalived.conf
 proxy_vip_cidr: "{{ ansible_facts.default_ipv4.prefix }}"
 proxy_vip_interface: "{{ ansible_facts.default_ipv4.interface }}"
 proxy_vrrp_script_user: root
-proxy_vrrp_router_id: 51
+proxy_vrrp_router_id: "{{ proxy_vip.split('.')[-1] | int }}"
 proxy_vrrp_auth_pass: changeme
 proxy_vrrp_master_priority: 110
 proxy_vrrp_backup_priority: 100
