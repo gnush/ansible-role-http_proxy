@@ -41,7 +41,8 @@ jobs:
           python-version: "3.14"
 
       - name: Install
-        run: pip install ansible-core molecule molecule-plugins[docker]
+        # netaddr: ansible.utils ip tests
+        run: pip install ansible-core molecule molecule-plugins[docker] netaddr
 
       - name: Molecule
         run: molecule test --platform-name ${{ matrix.platform }} --destroy never
