@@ -9,7 +9,14 @@ galaxy_info:
   platforms:
     - name: Ubuntu
       versions:
-        - all
+        - jammy
+        - noble
+        - resolute
+    - name: Debian
+      versions:
+        - bookworm
+        - trixie
+
   galaxy_tags:
     - proxy
     - squid
