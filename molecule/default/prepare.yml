@@ -1,0 +1,13 @@
+---
+# images ship with empty apt lists
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install test client
+      ansible.builtin.apt:
+        name: curl
+...

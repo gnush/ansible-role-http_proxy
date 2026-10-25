@@ -1,0 +1,121 @@
+---
+driver:
+  name: docker
+
+# one single-node HA cluster per platform, each on its own network so VRRP instances don't meet
+platforms:
+  - name: debian12
+    image: geerlingguy/docker-debian12-ansible
+    command: /lib/systemd/systemd
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    pre_build_image: true
+    groups: [proxy_debian12]
+    docker_networks:
+      - name: proxy_debian12
+        ipam_config:
+          - subnet: 172.30.1.0/24
+    networks:
+      - name: proxy_debian12
+        ipv4_address: 172.30.1.10
+  - name: debian13
+    image: geerlingguy/docker-debian13-ansible
+    command: /lib/systemd/systemd
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    pre_build_image: true
+    groups: [proxy_debian13]
+    docker_networks:
+      - name: proxy_debian13
+        ipam_config:
+          - subnet: 172.30.2.0/24
+    networks:
+      - name: proxy_debian13
+        ipv4_address: 172.30.2.10
+  - name: ubuntu2204
+    image: geerlingguy/docker-ubuntu2204-ansible
+    command: /lib/systemd/systemd
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    pre_build_image: true
+    groups: [proxy_ubuntu2204]
+    docker_networks:
+      - name: proxy_ubuntu2204
+        ipam_config:
+          - subnet: 172.30.3.0/24
+    networks:
+      - name: proxy_ubuntu2204
+        ipv4_address: 172.30.3.10
+  - name: ubuntu2404
+    image: geerlingguy/docker-ubuntu2404-ansible
+    command: /lib/systemd/systemd
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    pre_build_image: true
+    groups: [proxy_ubuntu2404]
+    docker_networks:
+      - name: proxy_ubuntu2404
+        ipam_config:
+          - subnet: 172.30.4.0/24
+    networks:
+      - name: proxy_ubuntu2404
+        ipv4_address: 172.30.4.10
+  - name: ubuntu2604
+    image: geerlingguy/docker-ubuntu2604-ansible
+    command: /lib/systemd/systemd
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    pre_build_image: true
+    groups: [proxy_ubuntu2604]
+    docker_networks:
+      - name: proxy_ubuntu2604
+        ipam_config:
+          - subnet: 172.30.5.0/24
+    networks:
+      - name: proxy_ubuntu2604
+        ipv4_address: 172.30.5.10
+
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      all:
+        # role reads ansible_host as peer address; this keeps the docker connection on the container name
+        ansible_docker_host: "{{ inventory_hostname }}"
+    host_vars:
+      debian12:
+        ansible_host: 172.30.1.10
+        proxy_peer_group: proxy_debian12
+        proxy_vip_host: debian12
+        proxy_vip: 172.30.1.100
+      debian13:
+        ansible_host: 172.30.2.10
+        proxy_peer_group: proxy_debian13
+        proxy_vip_host: debian13
+        proxy_vip: 172.30.2.100
+      ubuntu2204:
+        ansible_host: 172.30.3.10
+        proxy_peer_group: proxy_ubuntu2204
+        proxy_vip_host: ubuntu2204
+        proxy_vip: 172.30.3.100
+      ubuntu2404:
+        ansible_host: 172.30.4.10
+        proxy_peer_group: proxy_ubuntu2404
+        proxy_vip_host: ubuntu2404
+        proxy_vip: 172.30.4.100
+      ubuntu2604:
+        ansible_host: 172.30.5.10
+        proxy_peer_group: proxy_ubuntu2604
+        proxy_vip_host: ubuntu2604
+        proxy_vip: 172.30.5.100
+...

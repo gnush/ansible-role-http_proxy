@@ -1,0 +1,55 @@
+---
+- name: Verify
+  hosts: all
+  vars:
+    proxy_test_url: http://deb.debian.org/
+  tasks:
+    - name: Check squid config
+      ansible.builtin.command: squid -k parse -f /etc/squid/squid.conf
+      changed_when: false
+
+    - name: Check haproxy config
+      ansible.builtin.command: haproxy -c -f /etc/haproxy/haproxy.cfg
+      changed_when: false
+
+    - name: Populate service facts
+      ansible.builtin.service_facts:
+
+    - name: Check services are enabled and running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services[item].status == 'enabled'
+          - ansible_facts.services[item].state == 'running'
+      loop: [squid.service, haproxy.service, keepalived.service]
+
+    - name: Wait for VIP on MASTER
+      ansible.builtin.command: ip -4 -o addr show
+      register: proxy_addrs
+      changed_when: false
+      until: proxy_vip ~ '/' in proxy_addrs.stdout
+      retries: 10
+      delay: 1
+
+    - name: Fetch via VIP
+      ansible.builtin.command: "curl -sf -o /dev/null -x http://{{ proxy_vip }}:3128 {{ proxy_test_url }}"
+      changed_when: false
+
+    - name: Fetch internal destination via VIP
+      ansible.builtin.command: "curl -s -o /dev/null -w '%{http_code}' -x http://{{ proxy_vip }}:3128 http://{{ ansible_facts.default_ipv4.address }}/"
+      register: proxy_internal
+      changed_when: false
+      failed_when: proxy_internal.stdout != '403'
+
+    # source 127.0.0.1 is not in proxy_allowed_networks; Squid's localnet would allow it
+    - name: Check HAProxy rejects disallowed client
+      ansible.builtin.command: "curl -s -o /dev/null -x http://127.0.0.1:3128 {{ proxy_test_url }}"
+      register: proxy_disallowed
+      changed_when: false
+      failed_when: proxy_disallowed.rc == 0
+
+    - name: Check Squid port rejects clients without PROXY header
+      ansible.builtin.command: "curl -s -o /dev/null -x http://{{ ansible_facts.default_ipv4.address }}:3129 {{ proxy_test_url }}"
+      register: proxy_bypass
+      changed_when: false
+      failed_when: proxy_bypass.rc == 0
+...
