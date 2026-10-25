@@ -31,7 +31,7 @@ Defined in `defaults/main.yml`:
 | `proxy_vip_cidr`             | `ansible_facts.default_ipv4.prefix`    | VIP prefix length                                        |
 | `proxy_vip_interface`        | `ansible_facts.default_ipv4.interface` | VIP interface                                            |
 | `proxy_vrrp_router_id`       | last byte of `proxy_vip`               | VRRP router ID (1-255), unique per L2 segment            |
-| `proxy_vrrp_auth_pass`       | `changeme`                             | VRRP password, keep in Vault                             |
+| `proxy_vrrp_auth_pass`       | unset (no auth)                        | Optional VRRP password, 1-8 chars, cleartext on the wire |
 
 Required when `proxy_ha_enabled` (checked in `tasks/prechecks.yml`):
 

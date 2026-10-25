@@ -21,11 +21,13 @@ vrrp_instance VI_PROXY {
     priority {{ proxy_vrrp_master_priority if is_master else proxy_vrrp_backup_priority }}
     advert_int {{ proxy_vrrp_advert_int }}
 
+{% if proxy_vrrp_auth_pass is defined %}
     authentication {
         auth_type PASS
         auth_pass {{ proxy_vrrp_auth_pass }}
     }
 
+{% endif %}
     virtual_ipaddress {
         {{ proxy_vip }}/{{ proxy_vip_cidr }} dev {{ proxy_vip_interface }}
     }

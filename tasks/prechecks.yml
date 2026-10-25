@@ -17,6 +17,10 @@
              or (proxy_vrrp_router_id | int) in range(1, 256) }}
         msg: "proxy_vrrp_router_id must be 1-255. A proxy_vip ending in .0 needs an explicit proxy_vrrp_router_id."
       - that: >-
+          {{ proxy_vrrp_auth_pass is not defined
+             or (proxy_vrrp_auth_pass | string) | length in range(1, 9) }}
+        msg: "proxy_vrrp_auth_pass must be 1-8 characters. keepalived ignores anything longer."
+      - that: >-
           {{ proxy_peer_group | default('') not in groups
              or (proxy_vip_host is defined
                  and (proxy_vip_host | string) | trim | length > 0
