@@ -1,0 +1,16 @@
+---
+- name: Perform Prechecks
+  ansible.builtin.import_tasks: prechecks.yml
+
+- name: Configure Squid
+  ansible.builtin.import_tasks: squid.yml
+
+- name: HA Setup
+  when: proxy_ha_enabled | bool
+  block:
+    - name: Configure HAProxy
+      ansible.builtin.import_tasks: haproxy.yml
+
+    - name: Configure Keepalived
+      ansible.builtin.import_tasks: keepalived.yml
+...

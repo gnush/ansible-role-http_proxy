@@ -1,0 +1,30 @@
+---
+- name: Install keepalived packages
+  ansible.builtin.package:
+    name: "{{ proxy_keepalived_packages }}"
+    state: present
+
+- name: Allow non-local IP binding (for HAProxy on VIP)
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: '1'
+    state: present
+    sysctl_set: true
+    reload: true
+
+- name: Deploy keepalived configuration
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: "{{ proxy_keepalived_config_file }}"
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  notify: Restart keepalived
+
+- name: Ensure keepalived service is started and enabled
+  ansible.builtin.service:
+    name: "{{ proxy_keepalived_service_name }}"
+    state: started
+    enabled: true
+...

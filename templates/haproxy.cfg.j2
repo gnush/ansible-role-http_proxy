@@ -1,0 +1,45 @@
+{{ ansible_managed | comment }}
+
+global
+    log /dev/log local0
+    log /dev/log local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+    maxconn 4096
+
+defaults
+    log     global
+    mode    tcp
+    option  tcplog
+    option  dontlognull
+    timeout connect 5s
+    timeout client  1m
+    timeout server  1m
+    retries 3
+
+frontend proxy_in
+    bind *:{{ proxy_haproxy_port }}
+    mode tcp
+    default_backend squid_pool
+
+backend squid_pool
+    mode tcp
+    balance roundrobin
+    option tcp-check
+{% for h in groups[proxy_peer_group] %}
+    server {{ h }} {{ hostvars[h].ansible_host }}:{{ proxy_squid_port }} check inter 5s fall 3 rise 2
+{% endfor %}
+
+{% if proxy_haproxy_stats_enabled %}
+listen stats
+    bind {{ proxy_haproxy_stats_bind }}:{{ proxy_haproxy_stats_port }}
+    mode http
+    stats enable
+    stats uri /stats
+    stats refresh 10s
+    stats admin if LOCALHOST
+{% endif %}

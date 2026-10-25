@@ -1,0 +1,36 @@
+{{ ansible_managed | comment }}
+{% set is_master = (inventory_hostname == proxy_vip_host) %}
+
+global_defs {
+    script_user {{ proxy_vrrp_script_user }}
+    enable_script_security
+}
+
+vrrp_script chk_haproxy {
+    script "/usr/bin/killall -0 haproxy"
+    interval 2
+    weight 2
+    fall 2
+    rise 2
+}
+
+vrrp_instance VI_PROXY {
+    state {{ 'MASTER' if is_master else 'BACKUP' }}
+    interface {{ proxy_vip_interface }}
+    virtual_router_id {{ proxy_vrrp_router_id }}
+    priority {{ proxy_vrrp_master_priority if is_master else proxy_vrrp_backup_priority }}
+    advert_int {{ proxy_vrrp_advert_int }}
+
+    authentication {
+        auth_type PASS
+        auth_pass {{ proxy_vrrp_auth_pass }}
+    }
+
+    virtual_ipaddress {
+        {{ proxy_vip }}/{{ proxy_vip_cidr }} dev {{ proxy_vip_interface }}
+    }
+
+    track_script {
+        chk_haproxy
+    }
+}

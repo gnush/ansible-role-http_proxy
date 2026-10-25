@@ -1,0 +1,16 @@
+---
+- name: Restart squid
+  ansible.builtin.service:
+    name: "{{ proxy_squid_service_name }}"
+    state: restarted
+
+- name: Restart haproxy
+  ansible.builtin.service:
+    name: "{{ proxy_haproxy_service_name }}"
+    state: restarted
+
+- name: Restart keepalived
+  ansible.builtin.service:
+    name: "{{ proxy_keepalived_service_name }}"
+    state: restarted
+...

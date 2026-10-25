@@ -1,0 +1,79 @@
+---
+# false: single node, Squid only (no HAProxy/Keepalived)
+proxy_ha_enabled: true
+
+# Ports
+proxy_haproxy_port: 3128
+proxy_squid_port: 3129
+
+# Packages
+proxy_squid_packages:
+  - squid
+proxy_haproxy_packages:
+  - haproxy
+proxy_keepalived_packages:
+  - keepalived
+
+# Squid
+proxy_squid_service_name: squid
+proxy_squid_config_file: /etc/squid/squid.conf
+proxy_squid_cache_dir: /var/spool/squid
+proxy_squid_cache_size_mb: 1024
+proxy_squid_cache_mem_mb: 256
+proxy_squid_max_object_size_mb: 256
+proxy_squid_log_dir: /var/log/squid
+proxy_squid_user: proxy
+proxy_squid_group: proxy
+
+# Client networks allowed to use the proxy (Squid acl localnet)
+proxy_allowed_networks:
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16
+  - 169.254.0.0/16
+
+# Deny requests to destinations in proxy_internal_networks
+proxy_restrict_to_internet: true
+
+# RFC 1918 + link-local
+# https://www.rfc-editor.org/info/rfc1918/#section-3
+# https://en.wikipedia.org/wiki/Link-local_address
+proxy_internal_networks:
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16
+  - 169.254.0.0/16
+
+proxy_safe_ports:
+  - 80    # http
+  - 21    # ftp
+  - 443   # https
+  - 70    # gopher
+  - 210   # wais
+  - 1025-65535
+  - 280   # http-mgmt
+  - 488   # gss-http
+  - 591   # filemaker
+  - 777   # multiling http
+proxy_ssl_ports:
+  - 443
+
+# HAProxy
+proxy_haproxy_service_name: haproxy
+proxy_haproxy_config_file: /etc/haproxy/haproxy.cfg
+proxy_haproxy_stats_enabled: true
+proxy_haproxy_stats_bind: 127.0.0.1
+proxy_haproxy_stats_port: 7777
+
+# Keepalived / VIP
+proxy_keepalived_service_name: keepalived
+proxy_keepalived_config_file: /etc/keepalived/keepalived.conf
+proxy_vip_cidr: "{{ ansible_default_ipv4.prefix }}"
+proxy_vip_interface: "{{ ansible_default_ipv4.interface }}"
+proxy_vrrp_script_user: root
+proxy_vrrp_router_id: 51
+proxy_vrrp_auth_pass: changeme
+proxy_vrrp_master_priority: 110
+proxy_vrrp_backup_priority: 100
+proxy_vrrp_advert_int: 1
+...

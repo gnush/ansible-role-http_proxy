@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  role_name: http_proxy
+  namespace: core
+  author: gnush
+  description: Squid forward proxy with HAProxy load balancing and Keepalived VIP failover
+  license: MIT
+  min_ansible_version: "2.11"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+  galaxy_tags:
+    - proxy
+    - squid
+    - haproxy
+    - keepalived
+    - ha
+...

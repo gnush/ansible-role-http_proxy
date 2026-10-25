@@ -1,0 +1,62 @@
+{{ ansible_managed | comment }}
+
+## HAProxy backend port
+http_port {{ proxy_squid_port }}
+
+## ACLs
+acl localnet src 127.0.0.0/8
+{% for net in proxy_allowed_networks %}
+acl localnet src {{ net }}
+{% endfor %}
+
+{% for port in proxy_safe_ports %}
+acl Safe_ports port {{ port }}
+{% endfor %}
+
+{% for port in proxy_ssl_ports %}
+acl SSL_ports port {{ port }}
+{% endfor %}
+
+acl CONNECT method CONNECT
+
+{% if proxy_restrict_to_internet %}
+{% for net in proxy_internal_networks %}
+acl internal_networks dst {{ net }}
+{% endfor %}
+{% endif %}
+
+## Access rules
+http_access deny !Safe_ports
+http_access deny CONNECT !SSL_ports
+
+http_access allow localhost manager
+http_access deny manager
+
+{% if proxy_restrict_to_internet %}
+## Internet only: no internal destinations
+http_access deny localnet internal_networks
+{% endif %}
+
+http_access allow localnet
+http_access allow localhost
+http_access deny all
+
+## Cache
+cache_dir ufs {{ proxy_squid_cache_dir }} {{ proxy_squid_cache_size_mb }} 16 256
+cache_mem {{ proxy_squid_cache_mem_mb }} MB
+maximum_object_size {{ proxy_squid_max_object_size_mb }} MB
+coredump_dir {{ proxy_squid_cache_dir }}
+
+## Logging
+access_log {{ proxy_squid_log_dir }}/access.log
+cache_log {{ proxy_squid_log_dir }}/cache.log
+
+## Don't leak client IPs upstream
+forwarded_for delete
+via off
+
+## Squid default refresh patterns
+refresh_pattern ^ftp:           1440    20%     10080
+refresh_pattern ^gopher:        1440    0%      1440
+refresh_pattern -i (/cgi-bin/|\?) 0     0%      0
+refresh_pattern .               0       20%     4320

@@ -1,0 +1,27 @@
+---
+- name: Verify HA setup environment  # noqa: jinja[invalid]
+  when: proxy_ha_enabled | bool
+  vars:
+    proxy_ha_checks:
+      - that: >-
+          {{ proxy_peer_group is defined
+             and (proxy_peer_group | string) | trim | length > 0
+             and proxy_peer_group in groups }}
+        msg: "proxy_peer_group is required when HA is enabled. Specify a valid host group."
+      - that: >-
+          {{ proxy_vip is defined
+             and proxy_vip is ansible.utils.ipv4_address }}
+        msg: "proxy_vip is required when HA is enabled. Specify a valid IP."
+      - that: >-
+          {{ proxy_peer_group | default('') not in groups
+             or (proxy_vip_host is defined
+                 and (proxy_vip_host | string) | trim | length > 0
+                 and proxy_vip_host in groups[proxy_peer_group]) }}
+        msg: "proxy_vip_host is required when HA is enabled. Specify a valid host in proxy_peer_group."
+    proxy_ha_failures: "{{ proxy_ha_checks | rejectattr('that') | map(attribute='msg') | list }}"
+  block:
+    - name: Report all missing or invalid HA variables
+      ansible.builtin.fail:
+        msg: "{{ proxy_ha_failures }}"
+      when: proxy_ha_failures | length > 0
+...

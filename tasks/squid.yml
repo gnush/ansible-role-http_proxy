@@ -1,0 +1,56 @@
+---
+- name: Install squid packages
+  ansible.builtin.package:
+    name: "{{ proxy_squid_packages }}"
+    state: present
+
+- name: Ensure squid cache directory exists
+  ansible.builtin.file:
+    path: "{{ proxy_squid_cache_dir }}"
+    state: directory
+    owner: "{{ proxy_squid_user }}"
+    group: "{{ proxy_squid_group }}"
+    mode: '0750'
+
+- name: Ensure squid log directory exists
+  ansible.builtin.file:
+    path: "{{ proxy_squid_log_dir }}"
+    state: directory
+    owner: "{{ proxy_squid_user }}"
+    group: "{{ proxy_squid_group }}"
+    mode: '0750'
+
+- name: Deploy squid configuration
+  ansible.builtin.template:
+    src: squid.conf.j2
+    dest: "{{ proxy_squid_config_file }}"
+    owner: root
+    group: "{{ proxy_squid_group }}"
+    mode: '0640'
+    backup: true
+    validate: "squid -k parse -f %s"
+  notify: Restart squid
+
+- name: Check whether squid cache is already initialised
+  ansible.builtin.stat:
+    path: "{{ proxy_squid_cache_dir }}/00"
+  register: proxy_squid_cache_stat
+
+- name: Stop squid before initial cache build
+  ansible.builtin.service:
+    name: "{{ proxy_squid_service_name }}"
+    state: stopped
+  when: not proxy_squid_cache_stat.stat.exists
+
+- name: Initialize squid cache directories
+  ansible.builtin.command:
+    cmd: "squid -N -z -f {{ proxy_squid_config_file }}"
+  when: not proxy_squid_cache_stat.stat.exists
+  changed_when: true
+
+- name: Ensure squid service is started and enabled
+  ansible.builtin.service:
+    name: "{{ proxy_squid_service_name }}"
+    state: started
+    enabled: true
+...
