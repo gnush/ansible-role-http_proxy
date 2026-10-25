@@ -1,9 +1,21 @@
 {{ ansible_managed | comment }}
 
-## HAProxy backend port
+{% if proxy_ha_enabled | bool %}
+## HAProxy backend port; PROXY protocol header carries the real client IP
+http_port {{ proxy_squid_port }} require-proxy-header
+{% else %}
 http_port {{ proxy_squid_port }}
+{% endif %}
 
 ## ACLs
+{% if proxy_ha_enabled | bool %}
+{% for h in groups[proxy_peer_group] %}
+acl haproxy_peers src {{ hostvars[h].ansible_host }}
+{% endfor %}
+proxy_protocol_access allow haproxy_peers
+proxy_protocol_access deny all
+
+{% endif %}
 acl localnet src 127.0.0.0/8
 {% for net in proxy_allowed_networks %}
 acl localnet src {{ net }}

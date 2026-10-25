@@ -94,7 +94,9 @@ proxy_nodes:
 ## Access Control
 
 Only clients from `proxy_allowed_networks` are accepted. HAProxy rejects other
-sources before they reach Squid; Squid checks the same list for direct connections.
+sources before they reach Squid. HAProxy passes the client IP to Squid via PROXY
+protocol, so Squid checks and logs the real client. In HA mode Squid's port only
+accepts PROXY protocol connections from HAProxy peers; clients cannot bypass HAProxy.
 
 With `proxy_restrict_to_internet: true` (default), allowed clients can only reach
 destinations outside `proxy_internal_networks`, i.e. the proxy cannot be used to reach

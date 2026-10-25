@@ -32,7 +32,7 @@ backend squid_pool
     balance roundrobin
     option tcp-check
 {% for h in groups[proxy_peer_group] %}
-    server {{ h }} {{ hostvars[h].ansible_host }}:{{ proxy_squid_port }} check inter 5s fall 3 rise 2
+    server {{ h }} {{ hostvars[h].ansible_host }}:{{ proxy_squid_port }} send-proxy check check-send-proxy inter 5s fall 3 rise 2
 {% endfor %}
 
 {% if proxy_haproxy_stats_enabled %}
