@@ -9,17 +9,23 @@ global_defs {
 vrrp_script chk_haproxy {
     script "/usr/bin/killall -0 haproxy"
     interval 2
-    weight 2
+    # a failed check must drop the master below the backup
+    weight -{{ proxy_vrrp_master_priority - proxy_vrrp_backup_priority + 10 }}
     fall 2
     rise 2
 }
 
 vrrp_instance VI_PROXY {
-    state {{ 'MASTER' if is_master else 'BACKUP' }}
+    # BACKUP on both: preempt_delay is ignored with state MASTER; priority picks the master
+    state BACKUP
     interface {{ proxy_vip_interface }}
     virtual_router_id {{ proxy_vrrp_router_id }}
     priority {{ proxy_vrrp_master_priority if is_master else proxy_vrrp_backup_priority }}
     advert_int {{ proxy_vrrp_advert_int }}
+{% if is_master %}
+    # master only: on the backup it would delay failover too
+    preempt_delay {{ proxy_vrrp_preempt_delay }}
+{% endif %}
 
 {% if proxy_vrrp_auth_pass is defined %}
     authentication {

@@ -75,4 +75,5 @@ proxy_vrrp_router_id: "{{ proxy_vip.split('.')[-1] | int }}"
 proxy_vrrp_master_priority: 110
 proxy_vrrp_backup_priority: 100
 proxy_vrrp_advert_int: 1
+proxy_vrrp_preempt_delay: 60
 ...
